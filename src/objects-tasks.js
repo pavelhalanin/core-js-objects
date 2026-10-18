@@ -386,33 +386,149 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+class Selector {
+  constructor(value = '') {
+    this.value = value;
+    this.state = {
+      has: {
+        element: false,
+        id: false,
+        class: false,
+        attr: false,
+        pseudoClass: false,
+        pseudoElement: false,
+      },
+    };
+  }
+
+  stringify() {
+    return this.value;
+  }
+
+  checkSelectorPartsOrderForType(type) {
+    const ORDERED_SELECTOR_PARTS = [
+      'element',
+      'id',
+      'class',
+      'attr',
+      'pseudoClass',
+      'pseudoElement',
+    ];
+
+    const CURENT_INDEX = ORDERED_SELECTOR_PARTS.indexOf(type);
+
+    for (let i = CURENT_INDEX + 1; i < ORDERED_SELECTOR_PARTS.length; i += 1) {
+      const SELECTOR_PART = ORDERED_SELECTOR_PARTS[i];
+      if (this.state.has[SELECTOR_PART]) {
+        throw new Error(
+          'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+        );
+      }
+    }
+  }
+
+  element(value) {
+    this.checkSelectorPartsOrderForType('element');
+
+    if (this.state.has.element) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more than one time inside the selector'
+      );
+    }
+
+    this.state.has.element = true;
+    this.value += value;
+
+    return this;
+  }
+
+  id(value) {
+    this.checkSelectorPartsOrderForType('id');
+
+    if (this.state.has.id) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more than one time inside the selector'
+      );
+    }
+
+    this.state.has.id = true;
+    this.value += `#${value}`;
+
+    return this;
+  }
+
+  class(value) {
+    this.checkSelectorPartsOrderForType('class');
+
+    this.state.has.class = true;
+    this.value += `.${value}`;
+
+    return this;
+  }
+
+  attr(value) {
+    this.checkSelectorPartsOrderForType('attr');
+
+    this.state.has.attr = true;
+    this.value += `[${value}]`;
+
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.checkSelectorPartsOrderForType('pseudoClass');
+
+    this.state.has.pseudoClass = true;
+    this.value += `:${value}`;
+
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.checkSelectorPartsOrderForType('pseudoElement');
+
+    if (this.state.has.pseudoElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more than one time inside the selector'
+      );
+    }
+
+    this.state.has.pseudoElement = true;
+    this.value += `::${value}`;
+
+    return this;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new Selector().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new Selector().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new Selector().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new Selector().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new Selector().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new Selector().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new Selector(
+      `${selector1.stringify()} ${combinator} ${selector2.stringify()}`
+    );
   },
 };
 
